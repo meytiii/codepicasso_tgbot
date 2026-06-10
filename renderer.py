@@ -49,7 +49,9 @@ async def generate_code_image(code_text: str, theme: str = "monokai"):
         print(f"🎨 [LOCAL RENDERER] Booting headless engine... (Theme: {theme})")
         
         async with async_playwright() as p:
-            browser = await p.chromium.launch()
+            browser = await p.chromium.launch(
+                args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+            )
             page = await browser.new_page()
             await page.set_content(html_content)
             
