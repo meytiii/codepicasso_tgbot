@@ -1,0 +1,6 @@
+Use this cmd in your terminal to run the bot : 
+
+$env:TELEGRAM_BOT_TOKEN="paste your token here"
+& "C:\Users\YOURUSER\AppData\Local\Programs\Python\Python314\python.exe" bot.py
+
+The python version might be different, Check the correct path of python.exe for yourself and replace it in the command.
