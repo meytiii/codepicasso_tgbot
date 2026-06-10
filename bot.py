@@ -89,21 +89,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if query.data == "render_image":
         await query.edit_message_text("🖌️ *Painting your code canvas... Please wait.*", parse_mode="Markdown")
-        output_filename = f"snippet_{query.message.chat_id}_{query.message.message_id}.png"
         
         user_theme = context.user_data.get('theme', 'monokai')
         
         try:
-            generated_img = await generate_code_image(code_content, output_filename, theme=user_theme)
-            if generated_img and os.path.exists(generated_img):
-                with open(generated_img, "rb") as photo:
-                    await context.bot.send_photo(
-                        chat_id=query.message.chat_id,
-                        photo=photo, 
-                        caption="✨ *Rendered by Code Picasso* (@CodePicasso\\_bot)",
-                        parse_mode="Markdown"
-                    )
-                os.remove(generated_img)
+            image_buffer = await generate_code_image(code_content, theme=user_theme)
+            
+            if image_buffer:
+                await context.bot.send_photo(
+                    chat_id=query.message.chat_id,
+                    photo=image_buffer, 
+                    caption="✨ *Rendered by Code Picasso* (@CodePicasso\\_bot)",
+                    parse_mode="Markdown"
+                )
                 await query.message.delete()
             else:
                 await query.edit_message_text("❌ Failed to render code block canvas cleanly.")
