@@ -26,13 +26,16 @@ async def generate_code_image(code_text: str, theme: str = "monokai"):
             from pygments.lexers.special import TextLexer
             lexer = TextLexer()
 
-        font_filename = "UbuntuMono-Regular.ttf"
+        font_filename = "JetBrainsMono-Regular.ttf"
         font_path = os.path.abspath(font_filename)
         
         if not os.path.exists(font_path):
-            print("📥 [FONT] Downloading UbuntuMono font for the cloud server...")
-            font_url = "https://github.com/google/fonts/raw/main/ofl/ubuntumono/UbuntuMono-Regular.ttf"
-            urllib.request.urlretrieve(font_url, font_path)
+            print("📥 [FONT] Downloading JetBrains Mono font for the cloud server...")
+            try:
+                font_url = "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/fonts/ttf/JetBrainsMono-Regular.ttf"
+                urllib.request.urlretrieve(font_url, font_path)
+            except Exception as e:
+                print(f"⚠️ [FONT WARNING]: Download failed ({e}).")
 
         formatter = ImageFormatter(
             style=selected_style,
@@ -42,7 +45,7 @@ async def generate_code_image(code_text: str, theme: str = "monokai"):
             line_number_fg="#888888",
             background_color=bg_color,
             line_pad=10,
-            font_name=font_path 
+            font_name=font_path if os.path.exists(font_path) else "Courier New"
         )
 
         image_bytes = highlight(code_text, lexer, formatter)
