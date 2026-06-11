@@ -7,7 +7,6 @@ import os
 import urllib.request
 
 async def generate_code_image(code_text: str, theme: str = "monokai"):
-    """Renders the code canvas using pure Python. Zero external browsers required."""
     try:
         print(f"🎨 [LIGHTWEIGHT RENDERER] Processing snippet... (Theme: {theme})")
         
@@ -50,11 +49,39 @@ async def generate_code_image(code_text: str, theme: str = "monokai"):
 
         image_bytes = highlight(code_text, lexer, formatter)
         
-        print("✅ [SUCCESS] Canvas painted in pure Python memory!")
+        from PIL import Image, ImageDraw
         
-        img_buffer = io.BytesIO(image_bytes)
-        img_buffer.name = "snippet.png"
-        return img_buffer
+        raw_img = Image.open(io.BytesIO(image_bytes))
+        
+        top_bar_height = 45
+        padding_x = 10
+        padding_y_bottom = 10
+        new_width = raw_img.width + (padding_x * 2)
+        new_height = raw_img.height + top_bar_height + padding_y_bottom
+        
+        canvas = Image.new('RGBA', (new_width, new_height), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(canvas)
+        
+        draw.rounded_rectangle([(0, 0), (new_width, new_height)], radius=12, fill=bg_color)
+        
+        dot_radius = 6
+        dot_y = 22
+        dot_x = 20
+        gap = 20
+        
+        draw.ellipse([(dot_x, dot_y - dot_radius), (dot_x + dot_radius*2, dot_y + dot_radius)], fill="#ff5f56")
+        draw.ellipse([(dot_x + gap, dot_y - dot_radius), (dot_x + gap + dot_radius*2, dot_y + dot_radius)], fill="#ffbd2e")
+        draw.ellipse([(dot_x + gap*2, dot_y - dot_radius), (dot_x + gap*2 + dot_radius*2, dot_y + dot_radius)], fill="#27c93f")
+        
+        canvas.paste(raw_img, (padding_x, top_bar_height))
+        
+        print("✅ [SUCCESS] Canvas painted with Mac UI in pure Python memory!")
+        
+        final_buffer = io.BytesIO()
+        canvas.save(final_buffer, format="PNG")
+        final_buffer.seek(0)
+        final_buffer.name = "snippet.png"
+        return final_buffer
 
     except Exception as e:
         print(f"⚠️ [CRITICAL PYGMENTS ERROR]: {e}")
