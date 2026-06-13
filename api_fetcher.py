@@ -1,68 +1,52 @@
-import os
 import aiohttp
 import asyncio
-from dotenv import load_dotenv
-
-load_dotenv()
-API_KEY = os.getenv("BRS_API_KEY")
 
 async def get_market_data():
-    gold_url = f"https://Api.BrsApi.ir/Market/Gold_Currency.php?key={API_KEY}"
-    commodity_url = f"https://Api.BrsApi.ir/Market/Commodity.php?key={API_KEY}"
+    FIAT_URL = "https://raw.githubusercontent.com/meytiii/sarraf-bashi-bot/main/data/fiat.json"
+    GOLD_URL = "https://raw.githubusercontent.com/meytiii/sarraf-bashi-bot/main/data/gold.json"
     
     results = {
-        "usd": None,
-        "eur": None,
-        "gold_18k": None,
-        "silver_ounce": None
+        "usd": "نامشخص",
+        "eur": "نامشخص",
+        "gold_18k": "نامشخص",
+        "silver_ounce": "نامشخص"
     }
 
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
         try:
-            # 1. Fetch Gold & Currency
-            async with session.get(gold_url) as response:
+            async with session.get(FIAT_URL) as response:
                 if response.status == 200:
-                    data = await response.json()
+                    fiat_data = await response.json()
                     
-                    # Extract USD
-                    for item in data.get("currency", []):
-                        if item["symbol"] == "USD":
-                            results["usd"] = f"{item['price']:,} {item['unit']}"
-                            break
+                    if "usd" in fiat_data:
+                        results["usd"] = f"{int(fiat_data['usd']['value']):,} تومان"
+                    if "eur" in fiat_data:
+                        results["eur"] = f"{int(fiat_data['eur']['value']):,} تومان"
+            
+            async with session.get(GOLD_URL) as response:
+                if response.status == 200:
+                    gold_data = await response.json()
                     
-                    # Extract EUR
-                    for item in data.get("currency", []):
-                        if item["symbol"] == "EUR":
-                            results["eur"] = f"{item['price']:,} {item['unit']}"
-                            break
-                    
-                    # Extract 18k Gold
-                    for item in data.get("gold", []):
-                        if item["symbol"] == "IR_GOLD_18K":
-                            results["gold_18k"] = f"{item['price']:,} {item['unit']}"
-                            break
+                    if "18ayar" in gold_data:
+                        results["gold_18k"] = f"{int(gold_data['18ayar']['value']):,} تومان"
+            
+            async with session.get(FIAT_URL) as response:
+                if response.status == 200:
+                    fiat_data = await response.json()
+                    if "xag" in fiat_data:
+                        results["silver_ounce"] = f"{int(fiat_data['xag']['value']):,} دلار"
 
-            # 2. Fetch Commodities (for Silver)
-            async with session.get(commodity_url) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    
-                    # Extract Silver (XAGUSD)
-                    for item in data.get("metal_precious", []):
-                        if item["symbol"] == "XAGUSD":
-                            results["silver_ounce"] = f"{item['price']:,} {item['unit']}"
-                            break
-                            
             return results
 
         except Exception as e:
-            print(f"API Error: {e}")
+            print(f"🚨 GitHub Fetch Error: {e}")
             return None
 
 if __name__ == "__main__":
     async def test_api():
-        print("Fetching specific prices...")
+        print("Testing GitHub Raw JSON fetch...")
         data = await get_market_data()
+        print("\n--- FINAL RESULT ---")
         print(data)
         
     asyncio.run(test_api())
