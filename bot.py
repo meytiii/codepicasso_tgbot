@@ -5,7 +5,7 @@ import asyncio
 import httpx
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
-from renderer import generate_code_image, generate_math_image
+from renderer import generate_code_image, generate_math_image, detect_code_language
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -111,8 +111,13 @@ async def handle_code_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     if 'language' not in context.user_data:
         context.user_data['language'] = 'en'
 
+    piston_lang, lang_badge = await detect_code_language(code_content)
     context.user_data['snippet'] = code_content
+    context.user_data['detected_lang'] = piston_lang
 
+    base_received_msg = get_text(context, "received")
+    badge_header = f"<b>{lang_badge}</b>\n\n"
+    
     keyboard = [
         [
             InlineKeyboardButton(get_text(context, "btn_img"), callback_data="render_image"),
@@ -128,7 +133,7 @@ async def handle_code_message(update: Update, context: ContextTypes.DEFAULT_TYPE
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(get_text(context, "received"), reply_markup=reply_markup, parse_mode="Markdown")
+    await update.message.reply_text(f"{badge_header}{base_received_msg}", reply_markup=reply_markup, parse_mode="HTML")
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -187,8 +192,14 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif query.data == "run_code":
         await query.edit_message_text(get_text(context, "executing"), parse_mode="Markdown")
         
+        target_lang = context.user_data.get('detected_lang', 'python')
+        
+        if target_lang in ["text", "html", "css"]:
+            await query.edit_message_text("❌ This format type cannot be executed directly in a terminal console.")
+            return
+
         piston_url = "https://emkc.org/api/v2/piston/execute"
-        payload = {"language": "python", "version": "3.10.0", "files": [{"content": code_content}]}
+        payload = {"language": target_lang, "version": "*", "files": [{"content": code_content}]}
         
         try:
             async with httpx.AsyncClient(timeout=15.0) as client:

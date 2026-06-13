@@ -114,3 +114,32 @@ async def generate_math_image(latex_text: str):
     except Exception as e:
         print(f"⚠️ [CRITICAL MATH ERROR]: {e}")
         return None
+    
+async def detect_code_language(code_text: str):
+    try:
+        lexer = guess_lexer(code_text)
+        lexer_name = lexer.name.lower()
+    except ClassNotFound:
+        return "text", "📝 Plain Text"
+
+    mapping = {
+        "python": ("python", "🐍 Python"),
+        "python 3": ("python", "🐍 Python"),
+        "javascript": ("javascript", "🟨 JavaScript"),
+        "typescript": ("typescript", "🟦 TypeScript"),
+        "go": ("go", "🐹 Go"),
+        "rust": ("rust", "🦀 Rust"),
+        "c++": ("cpp", "💙 C++"),
+        "c": ("c", "⚙️ C"),
+        "java": ("java", "☕ Java"),
+        "html": ("html", "🌐 HTML"),
+        "css": ("css", "🎨 CSS"),
+        "bash": ("bash", "🐚 Bash"),
+        "sh": ("bash", "🐚 Bash")
+    }
+
+    for key, val in mapping.items():
+        if key in lexer_name:
+            return val[0], val[1]
+
+    return "text", f"💻 {lexer.name}"
