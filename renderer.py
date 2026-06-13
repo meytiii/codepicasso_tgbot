@@ -165,9 +165,12 @@ async def generate_web_snapshot(html_text: str):
                 headless=True,
                 args=[
                     '--no-sandbox', 
+                    '--disable-setuid-sandbox',
                     '--disable-dev-shm-usage', 
                     '--disable-gpu',
-                    '--single-process'
+                    '--no-zygote',
+                    '--disable-software-rasterizer',
+                    '--disable-extensions'
                 ]
             )
             page = await browser.new_page()
