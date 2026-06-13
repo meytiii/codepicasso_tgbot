@@ -2,8 +2,8 @@ name: Update Market Prices
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # Runs automatically every 15 minutes
-  workflow_dispatch: # Adds a button so you can run it manually anytime
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
 
 jobs:
   update-data:
@@ -31,8 +31,11 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
         
-        # Safely add the data folder (if it exists) without crashing
         git add data/ || echo "No data folder to add"
         
-        # Commit and push only if there are changes
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update market prices" && git push)
+        if ! git diff --quiet || ! git diff --staged --quiet; then
+          git commit -m "Auto-update market prices"
+          
+          git pull --rebase origin main
+          git push origin main
+        fi
