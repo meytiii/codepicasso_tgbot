@@ -2,7 +2,7 @@ import asyncio
 import os
 import logging
 from aiogram import Bot, Dispatcher, types, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from dotenv import load_dotenv
 
@@ -56,6 +56,27 @@ async def handle_fetch_prices(callback: CallbackQuery):
         result_text = "❌ متاسفانه در ارتباط با سرور قیمت‌ها مشکلی پیش آمد. لطفا دقایقی دیگر دوباره تلاش کنید."
         
     await callback.message.edit_text(result_text, reply_markup=get_main_keyboard())
+
+@dp.message(Command("price", "gheymat"))
+async def command_price_handler(message: types.Message) -> None:
+    status_msg = await message.answer("در حال دریافت اطلاعات از بازار... لطفا کمی صبر کنید.")
+    
+    data = await get_market_data()
+    
+    if data:
+        result_text = (
+            "قیمت‌های لحظه‌ای بازار:\n\n"
+            f"دلار آمریکا: {data['usd']}\n"
+            f"یورو: {data['eur']}\n"
+            f"پوند انگلیس: {data['gbp']}\n"
+            f"طلای 18 عیار: {data['gold_18k']}\n"
+            f"انس نقره: {data['silver_ounce']}\n\n"
+            "به‌روزرسانی شده از سرور صراف‌باشی"
+        )
+    else:
+        result_text = "متاسفانه در ارتباط با سرور قیمت‌ها مشکلی پیش آمد. لطفا دقایقی دیگر دوباره تلاش کنید."
+        
+    await status_msg.edit_text(result_text, reply_markup=get_main_keyboard())
 
 # --- Startup ---
 async def main() -> None:
