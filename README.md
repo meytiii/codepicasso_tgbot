@@ -51,11 +51,3 @@ python main.py
 
 ```
 
-
-
----
-
-## 📄 لایسنس | License
-
-این پروژه تحت لایسنس **MIT** منتشر شده است. استفاده و تغییر در آن کاملاً آزاد و رایگان است.
-Distributed under the **MIT License**. See `LICENSE` for more information.
