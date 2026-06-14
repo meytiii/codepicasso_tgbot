@@ -63,7 +63,6 @@ def main():
             return
         csrf_token = base64.b64encode((prefix + phpsessid).encode()).decode()
 
-        # Ensure the data directory exists before saving
         os.makedirs(DATA_DIR, exist_ok=True)
 
         make_request(driver, "last_currencies.php", FIAT_PATH, csrf_token)
